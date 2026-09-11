@@ -33,8 +33,13 @@ export default function MfaSetupPage() {
           }
         }
 
+        const { data: userData } = await supabase.auth.getUser();
+        const userEmail = userData?.user?.email || 'Admin';
+
         const { data, error } = await supabase.auth.mfa.enroll({
-          factorType: 'totp'
+          factorType: 'totp',
+          issuer: 'Vsage Mail',
+          friendlyName: userEmail
         });
 
         if (error) throw error;
