@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import styles from './Sidebar.module.css';
-import { Inbox, Send, FileText, Archive, Trash2, Star, Edit3, Settings } from 'lucide-react';
+import { Inbox, Send, FileText, Archive, Trash2, Star, Edit3, Settings, Users } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { createClient } from '@/lib/supabase/client';
@@ -78,14 +78,23 @@ export const Sidebar = () => {
               className={`${styles.navItem} ${pathname.startsWith('/import') ? styles.active : ''}`}
               onClick={() => router.push('/import')}
             >
-              <Settings size={18} />
-              Bulk Import
+              <Users size={18} />
+              Manage Users
             </div>
           </>
         )}
+
+        <div className={styles.sectionTitle}>Account</div>
+        <div 
+          className={`${styles.navItem} ${pathname.startsWith('/settings') ? styles.active : ''}`}
+          onClick={() => router.push('/settings')}
+        >
+          <Settings size={18} />
+          Settings
+        </div>
       </nav>
 
-      <div className={styles.userInfo} onClick={() => router.push('/settings')}>
+      <div className={styles.userInfo}>
         <Avatar fallback={profile?.full_name?.charAt(0) || '?'} />
         <div style={{ overflow: 'hidden' }}>
           <div style={{ fontWeight: 500, fontSize: '0.875rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', color: 'var(--text-primary)' }}>
