@@ -72,8 +72,8 @@ export const EmailComposer = () => {
   );
 
   const handleSend = async () => {
-    if (state.to.length === 0 || (!state.subject && !state.text)) {
-      alert("Please add a recipient and subject/body.");
+    if (state.to.length === 0 || !state.subject || (!state.html && !state.text)) {
+      alert("Please add a recipient, subject, and body.");
       return;
     }
     await sendEmail();

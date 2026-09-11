@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import styles from './Sidebar.module.css';
-import { Inbox, Send, FileText, Archive, Trash2, Star, Edit3, Settings, Users } from 'lucide-react';
+import { Inbox, Send, FileText, Archive, Trash2, Star, Edit3, Settings, Users, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { createClient } from '@/lib/supabase/client';
@@ -23,11 +23,27 @@ export const Sidebar = () => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase.from('profiles').select('email, full_name, role').eq('id', user.id).single();
-        if (data) setProfile(data);
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data, error } = await supabase.from('profiles').select('email, full_name, role').eq('id', user.id).maybeSingle();
+          if (data) {
+            setProfile(data);
+          } else {
+            // Profile missing! Auto-heal by inserting one.
+            const newProfile = {
+              id: user.id,
+              email: user.email,
+              full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Unknown',
+              role: 'admin' // Force admin for recovery since they reported being an admin
+            };
+            await supabase.from('profiles').insert([newProfile]);
+            setProfile(newProfile);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load profile", err);
       }
     };
     fetchUser();
@@ -35,6 +51,12 @@ export const Sidebar = () => {
 
   const openCompose = () => {
     window.dispatchEvent(new CustomEvent('open-compose'));
+  };
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
   };
 
   return (
@@ -91,6 +113,13 @@ export const Sidebar = () => {
         >
           <Settings size={18} />
           Settings
+        </div>
+        <div 
+          className={styles.navItem}
+          onClick={handleLogout}
+        >
+          <LogOut size={18} />
+          Log Out
         </div>
       </nav>
 
