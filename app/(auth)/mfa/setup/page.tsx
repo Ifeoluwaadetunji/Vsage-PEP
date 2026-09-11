@@ -105,10 +105,13 @@ export default function MfaSetupPage() {
         ) : (
           <form onSubmit={handleVerify} className={styles.form}>
             {qrCode && (
-              <div 
-                className={styles.qrContainer}
-                dangerouslySetInnerHTML={{ __html: qrCode }}
-              />
+              <div className={styles.qrContainer}>
+                <img 
+                  src={qrCode} 
+                  alt="MFA QR Code" 
+                  style={{ width: '100%', maxWidth: '250px', height: 'auto', display: 'block' }} 
+                />
+              </div>
             )}
             
             <div className={styles.field}>
