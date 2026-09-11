@@ -38,7 +38,7 @@ export default function DashboardLayout({
   }, []);
 
   return (
-    <div className={styles.container}>
+    <div className={styles.layout}>
       <Sidebar />
       <div className={styles.main}>
         <TopBar />
