@@ -1,11 +1,12 @@
 "use client";
-import React from 'react';
+import React, { use } from 'react';
 import { useThread } from '@/hooks/useThread';
 import { EmailThread } from '@/components/email/EmailThread';
 import { Spinner } from '@/components/ui/Spinner';
 
-export default function ThreadPage({ params }: { params: { id: string } }) {
-  const { emails, loading, error } = useThread(params.id);
+export default function ThreadPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const { emails, loading, error } = useThread(id);
 
   if (loading) {
     return (
