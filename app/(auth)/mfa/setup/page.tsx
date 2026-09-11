@@ -24,6 +24,15 @@ export default function MfaSetupPage() {
     
     const initializeMfa = async () => {
       try {
+        // First check for and remove any existing unverified factors so we can get a fresh QR code
+        const { data: factorsData, error: listError } = await supabase.auth.mfa.listFactors();
+        if (factorsData?.totp) {
+          const unverifiedFactors = factorsData.totp.filter(f => f.status === 'unverified');
+          for (const factor of unverifiedFactors) {
+            await supabase.auth.mfa.unenroll({ factorId: factor.id });
+          }
+        }
+
         const { data, error } = await supabase.auth.mfa.enroll({
           factorType: 'totp'
         });
