@@ -90,7 +90,7 @@ export default function SettingsPage() {
           Your account is protected by an Authenticator App. If you lose access to your device, you can re-enroll a new device here.
         </p>
 
-        <Button onClick={() => router.push('/mfa/setup')} variant="outline">
+        <Button onClick={() => router.push('/mfa/setup')} variant="secondary">
           Re-enroll Authenticator App
         </Button>
       </div>
