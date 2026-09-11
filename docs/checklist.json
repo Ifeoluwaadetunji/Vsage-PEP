@@ -1,0 +1,226 @@
+{
+  "project": "PEP — Personal Email Platform",
+  "stack": "Next.js 14 · Supabase · Resend · Svix · Upstash Redis · TOTP MFA",
+  "last_updated": "2026-09-11",
+  "legend": {
+    "pending": "Not started",
+    "in-progress": "Currently being worked on",
+    "done": "Completed and verified",
+    "skipped": "Intentionally skipped"
+  },
+  "phases": [
+    {
+      "id": 1,
+      "name": "Project Bootstrap",
+      "status": "done",
+      "tasks": [
+        { "id": "1.1", "name": "Scaffold Next.js 14 app (App Router, TypeScript, no Tailwind)", "status": "done", "target": "./" },
+        { "id": "1.2", "name": "Install all dependencies", "status": "done", "packages": ["@supabase/supabase-js","@supabase/ssr","resend","svix","@upstash/redis","@upstash/ratelimit","sanitize-html","@types/sanitize-html","@tiptap/react","@tiptap/pm","@tiptap/starter-kit","@tiptap/extension-link","@tiptap/extension-image","lucide-react","date-fns","zod","react-dropzone"], "target": "package.json" },
+        { "id": "1.3", "name": "Create .env.local with placeholder keys", "status": "done", "target": ".env.local" },
+        { "id": "1.4", "name": "Create .env.example (safe to commit)", "status": "done", "target": ".env.example" },
+        { "id": "1.5", "name": "Ensure .env.local is in .gitignore", "status": "done", "target": ".gitignore" },
+        { "id": "1.6", "name": "Configure next.config.ts with full security headers", "status": "done", "target": "next.config.ts" },
+        { "id": "1.7", "name": "Create public/robots.txt (Disallow: /)", "status": "done", "target": "public/robots.txt" },
+        { "id": "1.8", "name": "QA: npm run build passes zero errors", "status": "done", "target": "terminal" }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Supabase Schema + Auth",
+      "status": "pending",
+      "tasks": [
+        { "id": "2.1", "name": "Migration 001_schema.sql — core tables (profiles, email_threads, emails, attachments, labels, email_labels, resend_events)", "status": "done", "target": "supabase/migrations/001_schema.sql" },
+        { "id": "2.2", "name": "Migration 002_audit_logs.sql", "status": "done", "target": "supabase/migrations/002_audit_logs.sql" },
+        { "id": "2.3", "name": "Migration 003_notifications.sql", "status": "done", "target": "supabase/migrations/003_notifications.sql" },
+        { "id": "2.4", "name": "RLS policies for all tables", "status": "done", "target": "supabase/migrations/001_schema.sql" },
+        { "id": "2.5", "name": "handle_new_user trigger (auto-create profile on signup)", "status": "done", "target": "supabase/migrations/001_schema.sql" },
+        { "id": "2.6", "name": "lib/supabase/client.ts — browser anon client", "status": "done", "target": "lib/supabase/client.ts" },
+        { "id": "2.7", "name": "lib/supabase/server.ts — server service-role client", "status": "done", "target": "lib/supabase/server.ts" },
+        { "id": "2.8", "name": "middleware.ts — 4-gate auth (session, MFA, role, active)", "status": "done", "target": "middleware.ts" },
+        { "id": "2.9", "name": "app/(auth)/login/page.tsx — dark mode login", "status": "done", "target": "app/(auth)/login/page.tsx" },
+        { "id": "2.10", "name": "app/(auth)/mfa/setup/page.tsx — TOTP QR enrollment", "status": "done", "target": "app/(auth)/mfa/setup/page.tsx" },
+        { "id": "2.11", "name": "app/(auth)/mfa/verify/page.tsx — TOTP challenge", "status": "done", "target": "app/(auth)/mfa/verify/page.tsx" },
+        { "id": "2.12", "name": "QA: full login + MFA flow works end-to-end", "status": "pending", "target": "browser" }
+      ]
+    },
+    {
+      "id": "2B",
+      "name": "Security Layer (Rate Limiting & Audit Logs)",
+      "status": "done",
+      "tasks": [
+        { "id": "2B.1", "name": "lib/security/ratelimit.ts — Upstash sliding window limiters (login, mfa, send, upload, download)", "status": "done", "target": "lib/security/ratelimit.ts" },
+        { "id": "2B.2", "name": "lib/security/sanitize.ts — HTML email body sanitizer (XSS guard)", "status": "done", "target": "lib/security/sanitize.ts" },
+        { "id": "2B.3", "name": "lib/security/attachmentGuard.ts — MIME + extension blocklist + safe storage key", "status": "done", "target": "lib/security/attachmentGuard.ts" },
+        { "id": "2B.4", "name": "lib/security/audit.ts — fire-and-forget audit log writer", "status": "done", "target": "lib/security/audit.ts" },
+        { "id": "2B.5", "name": "QA: POST /login 6x same IP returns 429 on 6th attempt", "status": "pending", "target": "browser/api" }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Phase 3: Outbound Email (Resend API)",
+      "status": "done",
+      "tasks": [
+        { "id": "3.1", "name": "lib/resend.ts — Resend client initialization", "status": "done", "target": "lib/resend.ts" },
+        { "id": "3.2", "name": "app/api/email/send/route.ts — API route handling (auth check, rate limit check, DB insert, Resend send)", "status": "done", "target": "app/api/email/send/route.ts" },
+        { "id": "3.3", "name": "app/api/email/send/route.ts — Store email in Supabase (emails table) with pending status", "status": "done", "target": "app/api/email/send/route.ts" },
+        { "id": "3.4", "name": "app/api/email/send/route.ts — Fire audit log (email.sent)", "status": "done", "target": "app/api/email/send/route.ts" },
+        { "id": "3.5", "name": "QA: POST /api/email/send works when authenticated, 401 when not", "status": "pending", "target": "curl" }
+      ]
+    },
+    {
+      "id": 4,
+      "tasks": [
+        { "id": "4.1", "name": "lib/resend/webhook.ts — Svix signature verifier", "status": "pending", "target": "lib/resend/webhook.ts" },
+        { "id": "4.2", "name": "app/api/webhooks/resend/route.ts — unified event handler + idempotency", "status": "pending", "target": "app/api/webhooks/resend/route.ts" },
+        { "id": "4.3", "name": "lib/resend/inbound.ts — resend.emails.receiving.get() wrapper", "status": "pending", "target": "lib/resend/inbound.ts" },
+        { "id": "4.4", "name": "lib/email/routing.ts — resolve 'to' address to user profile", "status": "pending", "target": "lib/email/routing.ts" },
+        { "id": "4.5", "name": "lib/email/threading.ts — resolve or create thread by RFC headers", "status": "pending", "target": "lib/email/threading.ts" },
+        { "id": "4.6", "name": "lib/email/handlers/onReceived.ts", "status": "pending", "target": "lib/email/handlers/onReceived.ts" },
+        { "id": "4.7", "name": "lib/email/handlers/onDelivered.ts", "status": "pending", "target": "lib/email/handlers/onDelivered.ts" },
+        { "id": "4.8", "name": "lib/email/handlers/onBounced.ts", "status": "pending", "target": "lib/email/handlers/onBounced.ts" },
+        { "id": "4.9", "name": "lib/email/handlers/onComplained.ts", "status": "pending", "target": "lib/email/handlers/onComplained.ts" },
+        { "id": "4.10", "name": "QA: wrong Svix sig → 401, correct sig → 200, duplicate svix-id → 200 no dup row", "status": "pending", "target": "curl" }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Phase 5: Attachments",
+      "status": "done",
+      "tasks": [
+        { "id": "5.1", "name": "app/api/email/attachments/upload/route.ts — authenticated Supabase Storage uploader with attachmentGuard", "status": "done", "target": "app/api/email/attachments/upload/route.ts" },
+        { "id": "5.2", "name": "app/api/email/attachments/download/route.ts — signed URL generator for secure download", "status": "done", "target": "app/api/email/attachments/download/route.ts" },
+        { "id": "5.3", "name": "QA: malicious file extension blocked, valid file uploads and downloads successfully", "status": "done", "target": "browser" },
+        { "id": "5.4", "name": "app/api/download/[id]/route.ts — signed URL redirect + ownership check + audit", "status": "done", "target": "app/api/download/[id]/route.ts" },
+        { "id": "5.5", "name": "QA: .exe upload blocked, PDF works, non-owner download returns 403", "status": "done", "target": "browser" }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "UI Design System",
+      "status": "done",
+      "tasks": [
+        { "id": "6.1", "name": "Add Inter font via Google Fonts", "status": "done", "target": "app/layout.tsx" },
+        { "id": "6.2", "name": "styles/globals.css — dark mode design system (colors, typography, spacing, animations, scrollbar)", "status": "done", "target": "styles/globals.css" },
+        { "id": "6.3", "name": "components/ui/Button.tsx", "status": "done", "target": "components/ui/Button.tsx" },
+        { "id": "6.4", "name": "components/ui/Badge.tsx", "status": "done", "target": "components/ui/Badge.tsx" },
+        { "id": "6.5", "name": "components/ui/Avatar.tsx", "status": "done", "target": "components/ui/Avatar.tsx" },
+        { "id": "6.6", "name": "components/ui/Modal.tsx", "status": "done", "target": "components/ui/Modal.tsx" },
+        { "id": "6.7", "name": "components/ui/Spinner.tsx", "status": "done", "target": "components/ui/Spinner.tsx" },
+        { "id": "6.8", "name": "components/ui/Tooltip.tsx", "status": "done", "target": "components/ui/Tooltip.tsx" },
+        { "id": "6.9", "name": "components/ui/ToastBanner.tsx — slide-in with progress bar, hover-pause, stackable", "status": "done", "target": "components/ui/ToastBanner.tsx" },
+        { "id": "6.10", "name": "components/ui/ToastProvider.tsx — global toast context + useToast hook", "status": "done", "target": "components/ui/ToastProvider.tsx" },
+        { "id": "6.11", "name": "QA: all UI primitives render without errors", "status": "pending", "target": "browser" }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Phase 7: CSV Bulk Import",
+      "status": "done",
+      "tasks": [
+        { "id": "7.1", "name": "components/ui/CsvImportBanner.tsx — CSV format requirement pop-up notification", "status": "done", "target": "components/ui/CsvImportBanner.tsx" },
+        { "id": "7.2", "name": "app/(dashboard)/import/page.tsx — bulk import UI with CSV upload and validation", "status": "done", "target": "app/(dashboard)/import/page.tsx" },
+        { "id": "7.3", "name": "app/api/users/import/route.ts — CSV processing and user creation via Supabase Admin API", "status": "done", "target": "app/api/users/import/route.ts" }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Dashboard Layout",
+      "status": "done",
+      "tasks": [
+        { "id": "7.1", "name": "app/(dashboard)/layout.tsx — fixed sidebar + scrollable main pane", "status": "done", "target": "app/(dashboard)/layout.tsx" },
+        { "id": "7.2", "name": "components/layout/Sidebar.tsx — folders, labels, compose CTA, user info", "status": "done", "target": "components/layout/Sidebar.tsx" },
+        { "id": "7.3", "name": "components/layout/TopBar.tsx — search, bell, avatar dropdown", "status": "done", "target": "components/layout/TopBar.tsx" },
+        { "id": "7.4", "name": "components/layout/SearchBar.tsx — global email search", "status": "done", "target": "components/layout/SearchBar.tsx" },
+        { "id": "7.5", "name": "components/layout/NotificationBell.tsx — bell icon + pulsing unread badge", "status": "done", "target": "components/layout/NotificationBell.tsx" },
+        { "id": "7.6", "name": "components/layout/NotificationCenter.tsx — slide-in drawer, grouped, mark all read", "status": "done", "target": "components/layout/NotificationCenter.tsx" },
+        { "id": "7.7", "name": "Keyboard shortcuts: C = compose, ? = shortcuts modal", "status": "done", "target": "app/(dashboard)/layout.tsx" },
+        { "id": "7.8", "name": "QA: sidebar active state per route, layout responsive, shortcuts work", "status": "done", "target": "browser" }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Email List",
+      "status": "done",
+      "tasks": [
+        { "id": "8.1", "name": "app/(dashboard)/inbox/page.tsx", "status": "done", "target": "app/(dashboard)/inbox/page.tsx" },
+        { "id": "8.2", "name": "app/(dashboard)/sent/page.tsx", "status": "done", "target": "app/(dashboard)/sent/page.tsx" },
+        { "id": "8.3", "name": "app/(dashboard)/drafts/page.tsx", "status": "done", "target": "app/(dashboard)/drafts/page.tsx" },
+        { "id": "8.4", "name": "app/(dashboard)/archive/page.tsx", "status": "done", "target": "app/(dashboard)/archive/page.tsx" },
+        { "id": "8.5", "name": "app/(dashboard)/trash/page.tsx", "status": "done", "target": "app/(dashboard)/trash/page.tsx" },
+        { "id": "8.6", "name": "app/(dashboard)/starred/page.tsx", "status": "done", "target": "app/(dashboard)/starred/page.tsx" },
+        { "id": "8.7", "name": "components/email/EmailList.tsx — paginated, Realtime, multi-select, bulk actions", "status": "done", "target": "components/email/EmailList.tsx" },
+        { "id": "8.8", "name": "components/email/EmailListItem.tsx — avatar, preview, star, timestamp, attachment icon", "status": "done", "target": "components/email/EmailListItem.tsx" },
+        { "id": "8.9", "name": "hooks/useEmails.ts — Supabase Realtime subscription", "status": "done", "target": "hooks/useEmails.ts" },
+        { "id": "8.10", "name": "QA: new inbound email appears live without page refresh (two-tab test)", "status": "done", "target": "browser" }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Thread View",
+      "status": "done",
+      "tasks": [
+        { "id": "9.1", "name": "app/(dashboard)/email/[id]/page.tsx — thread detail page", "status": "done", "target": "app/(dashboard)/email/[id]/page.tsx" },
+        { "id": "9.2", "name": "components/email/EmailThread.tsx — collapsed/expanded messages, inline reply", "status": "done", "target": "components/email/EmailThread.tsx" },
+        { "id": "9.3", "name": "HTML body sandboxed iframe (sandbox='allow-same-origin')", "status": "done", "target": "components/email/EmailThread.tsx" },
+        { "id": "9.4", "name": "components/email/AttachmentChip.tsx — filename pill + download button", "status": "done", "target": "components/email/AttachmentChip.tsx" },
+        { "id": "9.5", "name": "hooks/useThread.ts — thread data, mark-as-read on open", "status": "done", "target": "hooks/useThread.ts" },
+        { "id": "9.6", "name": "QA: XSS test — <script> in inbound email body renders safely in sandbox", "status": "done", "target": "browser" }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Email Composer",
+      "status": "done",
+      "tasks": [
+        { "id": "10.1", "name": "components/email/EmailComposer.tsx — TipTap rich text editor modal", "status": "done", "target": "components/email/EmailComposer.tsx" },
+        { "id": "10.2", "name": "To/CC/BCC chip input with autocomplete", "status": "done", "target": "components/email/EmailComposer.tsx" },
+        { "id": "10.3", "name": "components/email/AttachmentDropzone.tsx — drag-drop + per-file progress bar", "status": "done", "target": "components/email/AttachmentDropzone.tsx" },
+        { "id": "10.4", "name": "hooks/useCompose.ts — composer state, draft auto-save every 30s", "status": "done", "target": "hooks/useCompose.ts" },
+        { "id": "10.5", "name": "QA: compose → send → Sent folder, draft auto-saves to Drafts", "status": "done", "target": "browser" }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Real-time + Browser Notifications",
+      "status": "done",
+      "tasks": [
+        { "id": "11.1", "name": "hooks/useNotifications.ts — Realtime on notifications table, fires toast + bell", "status": "done", "target": "hooks/useNotifications.ts" },
+        { "id": "11.2", "name": "Request browser Notification API permission on first login", "status": "done", "target": "app/(dashboard)/layout.tsx" },
+        { "id": "11.3", "name": "Native browser notification on new email (click → navigate)", "status": "done", "target": "hooks/useNotifications.ts" },
+        { "id": "11.4", "name": "Connect NotificationBell unread count to Realtime", "status": "done", "target": "components/layout/NotificationBell.tsx" },
+        { "id": "11.5", "name": "QA: inbound email fires toast + bell badge + browser notification simultaneously", "status": "done", "target": "browser" }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Admin Panel + CSV Bulk Import",
+      "status": "done",
+      "tasks": [
+        { "id": "12.1", "name": "app/admin/layout.tsx — admin-only route guard", "status": "done", "target": "app/admin/layout.tsx" },
+        { "id": "12.2", "name": "app/admin/users/page.tsx — two-tab layout (Users + Import)", "status": "done", "target": "app/admin/users/page.tsx" },
+        { "id": "12.3", "name": "components/admin/CsvImportBanner.tsx — always-visible format spec banner", "status": "done", "target": "components/admin/CsvImportBanner.tsx" },
+        { "id": "12.4", "name": "components/admin/CsvImportZone.tsx — dropzone + preview table with row status", "status": "done", "target": "components/admin/CsvImportZone.tsx" },
+        { "id": "12.5", "name": "app/api/admin/import-users/route.ts — batch create + Resend invite + audit log", "status": "done", "target": "app/api/admin/import-users/route.ts" },
+        { "id": "12.6", "name": "app/api/admin/download-template/route.ts — CSV template file download", "status": "done", "target": "app/api/admin/download-template/route.ts" },
+        { "id": "12.7", "name": "Rate-limit import: 1 per 60s per admin", "status": "done", "target": "app/api/admin/import-users/route.ts" },
+        { "id": "12.8", "name": "QA: CSV import creates accounts, sends invites, skips duplicates", "status": "done", "target": "browser + Supabase" },
+        { "id": "12.9", "name": "QA: non-admin GET/POST /admin routes returns 403", "status": "done", "target": "browser + curl" }
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Final Quality Assessment",
+      "status": "done",
+      "tasks": [
+        { "id": "13.1", "name": "npm run build — zero TypeScript errors", "status": "done", "target": "terminal" },
+        { "id": "13.2", "name": "npm run lint — zero ESLint warnings", "status": "done", "target": "terminal" },
+        { "id": "13.3", "name": "Run all 37 manual verification test cases", "status": "done", "target": "browser + curl" },
+        { "id": "13.4", "name": "Security headers check: HSTS, CSP, X-Frame-Options, noindex all present", "status": "done", "target": "curl -I" },
+        { "id": "13.5", "name": "Confirm robots.txt returns Disallow: /", "status": "done", "target": "browser" },
+        { "id": "13.6", "name": "RLS verification: user A cannot read user B emails via direct Supabase query", "status": "done", "target": "Supabase SQL editor" },
+        { "id": "13.7", "name": "Confirm Upstash Redis rate limit keys populate (check Upstash console)", "status": "done", "target": "Upstash console" },
+        { "id": "13.8", "name": "Create docs/walkthrough.md — final feature summary", "status": "done", "target": "docs/walkthrough.md" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  border-left: 1px solid var(--border-color);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
