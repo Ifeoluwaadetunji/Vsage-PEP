@@ -5,11 +5,29 @@ import { TopBar } from '@/components/layout/TopBar';
 import { EmailComposer } from '@/components/email/EmailComposer';
 import styles from './DashboardLayout.module.css';
 
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('email').eq('id', user.id).single();
+        if (profile && !profile.email?.endsWith('@mail.vsage.store')) {
+          router.push('/onboarding');
+        }
+      }
+    };
+    checkOnboarding();
+  }, [router]);
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in an input

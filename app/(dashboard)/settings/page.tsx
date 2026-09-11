@@ -112,7 +112,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <div>
-            <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", marginBottom: "0.5rem" }}>Email Address</label>
+            <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", marginBottom: "0.5rem" }}>PEP Mailbox Address</label>
             <input 
               type="email" 
               className="input-base" 

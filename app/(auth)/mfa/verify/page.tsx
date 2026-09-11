@@ -70,7 +70,13 @@ export default function MfaVerifyPage() {
         message: "Authentication successful.",
       });
       
-      router.push("/inbox");
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase.from('profiles').select('email').eq('id', user?.id).single();
+      if (profile?.email?.endsWith('@mail.vsage.store')) {
+        router.push("/inbox");
+      } else {
+        router.push("/onboarding");
+      }
       
     } catch (err: any) {
       toast({
