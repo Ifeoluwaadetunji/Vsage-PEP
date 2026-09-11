@@ -59,9 +59,17 @@ export const EmailComposer = () => {
           </div>
         ))}
         <input 
+          id={`email-input-${field}`}
           type="text" 
           placeholder={state[field].length === 0 ? `Add ${label}...` : ''}
           onKeyDown={(e) => handleInputKeyDown(e, field)}
+          onBlur={(e) => {
+            const val = e.currentTarget.value.trim();
+            if (val && val.includes('@')) {
+              updateState({ [field]: [...state[field], val] });
+              e.currentTarget.value = '';
+            }
+          }}
           className={styles.input}
         />
       </div>
@@ -72,11 +80,25 @@ export const EmailComposer = () => {
   );
 
   const handleSend = async () => {
-    if (state.to.length === 0 || !state.subject || (!state.html && !state.text)) {
+    const toInput = document.getElementById('email-input-to') as HTMLInputElement;
+    const ccInput = document.getElementById('email-input-cc') as HTMLInputElement;
+    const bccInput = document.getElementById('email-input-bcc') as HTMLInputElement;
+
+    const pendingTo = toInput?.value.trim().includes('@') ? [toInput.value.trim()] : [];
+    const pendingCc = ccInput?.value.trim().includes('@') ? [ccInput.value.trim()] : [];
+    const pendingBcc = bccInput?.value.trim().includes('@') ? [bccInput.value.trim()] : [];
+
+    const finalTo = [...state.to, ...pendingTo];
+    const finalCc = [...state.cc, ...pendingCc];
+    const finalBcc = [...state.bcc, ...pendingBcc];
+
+    const isBodyEmpty = !state.text || state.text.trim() === '';
+
+    if (finalTo.length === 0 || !state.subject || isBodyEmpty) {
       alert("Please add a recipient, subject, and body.");
       return;
     }
-    await sendEmail();
+    await sendEmail({ to: finalTo, cc: finalCc, bcc: finalBcc });
   };
 
   return (

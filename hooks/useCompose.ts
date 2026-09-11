@@ -82,19 +82,20 @@ export const useCompose = () => {
     return () => clearInterval(interval);
   }, [isOpen, state, supabase]);
 
-  const sendEmail = async () => {
+  const sendEmail = async (overrides?: Partial<ComposeState>) => {
     setIsSending(true);
+    const finalState = { ...state, ...overrides };
     try {
       const res = await fetch('/api/email/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to: state.to,
-          cc: state.cc,
-          bcc: state.bcc,
-          subject: state.subject,
-          html: state.html,
-          text: state.text
+          to: finalState.to,
+          cc: finalState.cc,
+          bcc: finalState.bcc,
+          subject: finalState.subject,
+          html: finalState.html,
+          text: finalState.text
         })
       });
 
