@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/ToastProvider';
 
@@ -22,7 +22,7 @@ export const useNotifications = () => {
   const supabase = createClient();
   const { toast } = useToast();
 
-  const fetchNotifications = React.useCallback(async () => {
+  const fetchNotifications = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
