@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
 
     // 5. Send via Resend
     const resendPayload: any = {
-      from: `Vsage Tech <${fromAddress}>`,
+      from: `"Vsage Tech" <${fromAddress}>`,
       to: Array.isArray(to) ? to : [to],
       subject,
       html: applyBrandTemplate(sanitizedHtml),
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
       .from('emails')
       .insert({
         owner_id: user.id,
-        from_address: `Vsage Tech <${fromAddress}>`,
+        from_address: `"Vsage Tech" <${fromAddress}>`,
         to_addresses: resendPayload.to,
         cc_addresses: resendPayload.cc || [],
         bcc_addresses: resendPayload.bcc || [],
