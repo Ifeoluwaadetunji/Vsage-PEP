@@ -6,6 +6,75 @@ import { sendRateLimit } from "@/lib/security/ratelimit";
 import { sanitizeEmailBody } from "@/lib/security/sanitize";
 import { logAudit } from "@/lib/security/audit";
 
+const applyBrandTemplate = (sanitizedContent: string) => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #F7F5EF;
+      color: #0D0F12;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background-color: #F7F5EF;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #0D0F12;
+      margin-top: 0;
+    }
+    a {
+      color: #2F8F7A;
+      text-decoration: none;
+    }
+    code, pre {
+      font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+      background-color: #EBE8E0;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .footer {
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid #5A6169;
+      text-align: center;
+    }
+    .footer p {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.65;
+      font-size: 12px;
+      color: #0D0F12;
+      margin: 0;
+    }
+  </style>
+</head>
+<body style="background-color: #F7F5EF; color: #0D0F12; font-family: 'DM Sans', -apple-system, sans-serif; margin: 0; padding: 0; line-height: 1.6;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+    <div style="font-size: 16px;">
+      ${sanitizedContent}
+    </div>
+    <div style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #5A6169; text-align: center;">
+      <p style="font-family: 'DM Sans', -apple-system, sans-serif; text-transform: uppercase; letter-spacing: 0.12em; font-size: 12px; color: #0D0F12; opacity: 0.65; margin: 0;">
+        by vsage
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
 export async function POST(req: NextRequest) {
   try {
     // 1. Authenticate user
@@ -56,10 +125,10 @@ export async function POST(req: NextRequest) {
 
     // 5. Send via Resend
     const resendPayload: any = {
-      from: fromAddress,
+      from: `Vsage Tech <${fromAddress}>`,
       to: Array.isArray(to) ? to : [to],
       subject,
-      html: sanitizedHtml,
+      html: applyBrandTemplate(sanitizedHtml),
       text: text || "",
     };
 
