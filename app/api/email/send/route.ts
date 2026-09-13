@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
       .from('emails')
       .insert({
         owner_id: user.id,
-        from_address: fromAddress,
+        from_address: `Vsage Tech <${fromAddress}>`,
         to_addresses: resendPayload.to,
         cc_addresses: resendPayload.cc || [],
         bcc_addresses: resendPayload.bcc || [],

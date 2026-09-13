@@ -63,7 +63,7 @@ export const EmailThread = ({ emails }: { emails: ThreadEmail[] }) => {
                   <Avatar fallback={email.from_address.charAt(0).toUpperCase()} />
                   <div>
                     <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.875rem' }}>
-                      {email.from_address}
+                      {email.from_address.match(/^(.*?)\s*<.*>$/)?.[1]?.replace(/^"|"$/g, '').trim() || email.from_address}
                     </div>
                     <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
                       to {email.to_addresses?.join(', ')}

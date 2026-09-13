@@ -42,7 +42,7 @@ export const EmailListItem: React.FC<Props> = ({ email, isSelected, onSelect, on
       </div>
 
       <div className={styles.sender}>
-        {email.from_address}
+        {email.from_address.match(/^(.*?)\s*<.*>$/)?.[1]?.replace(/^"|"$/g, '').trim() || email.from_address}
       </div>
 
       <div className={styles.content}>
