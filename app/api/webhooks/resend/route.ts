@@ -25,7 +25,7 @@ async function handleInboundEmail(payload: any) {
 
   const extractEmail = (str: string) => {
     const match = str.match(/<([^>]+)>/);
-    return match ? match[1] : str;
+    return match ? match[1].toLowerCase() : str.toLowerCase();
   };
 
   const recipientEmail = toArray.length > 0 ? extractEmail(toArray[0]) : null;
