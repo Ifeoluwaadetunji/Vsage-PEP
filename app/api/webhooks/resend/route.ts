@@ -125,7 +125,11 @@ export async function POST(req: NextRequest) {
       return new NextResponse("Invalid signature", { status: 400 });
     }
 
-    const { type: eventType, data } = evt;
+    const payloadObj = evt || parsedPayload;
+    if (!payloadObj) {
+      return new NextResponse("Invalid JSON payload", { status: 400 });
+    }
+    const { type: eventType, data } = payloadObj;
     const resendEventId = svix_id;
     
     const supabase = await createServiceClient();
