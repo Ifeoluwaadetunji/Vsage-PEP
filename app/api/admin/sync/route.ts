@@ -48,26 +48,13 @@ export async function GET(req: NextRequest) {
           const { data: attachmentsList } = await resend.emails.receiving.attachments.list({ emailId });
           if (attachmentsList && attachmentsList.length > 0) {
             for (const att of attachmentsList) {
-              const { data: attData } = await resend.emails.receiving.attachments.get({ id: att.id, emailId });
-              if (attData?.download_url) {
-                const fileRes = await fetch(attData.download_url);
-                if (fileRes.ok) {
-                  const buffer = await fileRes.arrayBuffer();
-                  const storagePath = `sync/${Date.now()}-${att.filename?.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-                  const { data: uploadData } = await supabase.storage.from("attachments").upload(storagePath, buffer, {
-                    contentType: att.content_type || 'application/octet-stream'
-                  });
-                  if (uploadData) {
-                    await supabase.from('attachments').insert({
-                      email_id: existingEmail.id,
-                      filename: att.filename,
-                      mime_type: att.content_type,
-                      size_bytes: buffer.byteLength,
-                      storage_path: uploadData.path
-                    });
-                  }
-                }
-              }
+              await supabase.from('attachments').insert({
+                email_id: existingEmail.id,
+                filename: att.filename,
+                mime_type: att.content_type,
+                size_bytes: att.size || 0,
+                storage_path: 'resend:pending'
+              });
             }
           }
         }

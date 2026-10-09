@@ -204,27 +204,15 @@ export async function POST(req: NextRequest) {
       console.error("[DB Error]", dbError);
       // We don't fail the request here, email is sent, just missing from outbox
     } else if (emailRecord?.id && files.length > 0) {
-      // Upload attachments to Supabase Storage
+      // Just insert metadata, we will download directly from Resend on demand
       for (const file of files) {
-        const storagePath = `${user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const { data: uploadData, error: uploadError } = await serviceRole.storage
-          .from("attachments")
-          .upload(storagePath, file, {
-            cacheControl: "3600",
-            upsert: false,
-          });
-
-        if (!uploadError && uploadData) {
-          await serviceRole.from('attachments').insert({
-            email_id: emailRecord.id,
-            filename: file.name,
-            mime_type: file.type,
-            size_bytes: file.size,
-            storage_path: uploadData.path
-          });
-        } else if (uploadError) {
-          console.error("[Storage Upload Error]", uploadError);
-        }
+        await serviceRole.from('attachments').insert({
+          email_id: emailRecord.id,
+          filename: file.name,
+          mime_type: file.type,
+          size_bytes: file.size,
+          storage_path: 'resend:pending'
+        });
       }
     }
 

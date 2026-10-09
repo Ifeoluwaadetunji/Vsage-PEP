@@ -88,40 +88,14 @@ async function handleInboundEmail(payload: any, emailIdFromPayload?: string) {
   if (insertedEmail?.id && attachments && attachments.length > 0 && emailIdFromPayload) {
     for (const att of attachments) {
       if (!att.id) continue;
-      try {
-        const { data: attachmentData } = await resend.emails.receiving.attachments.get({
-          id: att.id,
-          emailId: emailIdFromPayload
-        });
-        
-        if (attachmentData?.download_url) {
-          const fileRes = await fetch(attachmentData.download_url);
-          if (fileRes.ok) {
-            const buffer = await fileRes.arrayBuffer();
-            const storagePath = `${ownerId}/${Date.now()}-${att.filename?.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-            
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from("attachments")
-              .upload(storagePath, buffer, {
-                contentType: att.content_type || 'application/octet-stream',
-                cacheControl: "3600",
-                upsert: false,
-              });
-
-            if (uploadData && !uploadError) {
-              await supabase.from('attachments').insert({
-                email_id: insertedEmail.id,
-                filename: att.filename,
-                mime_type: att.content_type || 'application/octet-stream',
-                size_bytes: buffer.byteLength,
-                storage_path: uploadData.path
-              });
-            }
-          }
-        }
-      } catch (err) {
-        console.error(`Failed to process attachment ${att.id}`, err);
-      }
+      
+      await supabase.from('attachments').insert({
+        email_id: insertedEmail.id,
+        filename: att.filename,
+        mime_type: att.content_type || 'application/octet-stream',
+        size_bytes: 0, // Inbound webhook payload doesn't provide size easily, but that's fine
+        storage_path: 'resend:pending'
+      });
     }
   }
 
