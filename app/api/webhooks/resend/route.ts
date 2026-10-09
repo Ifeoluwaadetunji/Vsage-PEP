@@ -217,7 +217,14 @@ export async function POST(req: NextRequest) {
           } else if (fullEmail) {
             data.html = fullEmail.html;
             data.text = fullEmail.text;
-            data.attachments = fullEmail.attachments || data.attachments;
+            
+            // Fetch attachments list
+            const { data: attachmentsList } = await resend.emails.receiving.attachments.list({
+              emailId: receivingEmailId
+            });
+            if (attachmentsList && attachmentsList.length > 0) {
+              data.attachments = attachmentsList;
+            }
           }
         } catch (e) {
           console.error("Error fetching full email body", e);
