@@ -137,8 +137,8 @@ export const EmailThread = ({ emails }: { emails: ThreadEmail[] }) => {
                     {email.body_html ? (
                       <iframe 
                         srcDoc={email.body_html} 
-                        sandbox="allow-same-origin allow-popups"
-                        style={{ width: '100%', minHeight: '300px', border: 'none', colorScheme: 'dark light' }}
+                        sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                        style={{ width: '100%', minHeight: '600px', height: '65vh', border: 'none', colorScheme: 'dark light' }}
                         title="Email Body"
                       />
                     ) : (
