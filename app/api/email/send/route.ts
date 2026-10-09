@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { sendRateLimit } from "@/lib/security/ratelimit";
 import { sanitizeEmailBody } from "@/lib/security/sanitize";
 import { logAudit } from "@/lib/security/audit";
+import { getOrCreateThread } from "@/lib/threading";
 
 const applyBrandTemplate = (sanitizedContent: string) => `
 <!DOCTYPE html>
@@ -168,10 +169,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to send email through provider" }, { status: 500 });
     }
 
+    // 5.5 Find or create thread
+    const allParticipants = [fromAddress, ...resendPayload.to, ...(resendPayload.cc || []), ...(resendPayload.bcc || [])];
+    const threadId = await getOrCreateThread(serviceRole, subject, allParticipants);
+
     // 6. Save to Supabase DB (outbound, pending delivery)
     const { data: emailRecord, error: dbError } = await serviceRole
       .from('emails')
       .insert({
+        thread_id: threadId,
         owner_id: user.id,
         from_address: `"Vsage Tech" <${fromAddress}>`,
         to_addresses: resendPayload.to,

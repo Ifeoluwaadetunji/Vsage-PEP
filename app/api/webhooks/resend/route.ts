@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Webhook } from "svix";
 import { createServiceClient } from "@/lib/supabase/server";
 import { resend } from "@/lib/resend";
+import { getOrCreateThread } from "@/lib/threading";
 
 async function handleInboundEmail(payload: any) {
   const {
@@ -51,10 +52,15 @@ async function handleInboundEmail(payload: any) {
 
   const ownerId = profile.id;
 
+  // 1.5 Find or create thread based on subject
+  const allParticipants = [from, ...toArray, ...ccArray, ...bccArray];
+  const threadId = await getOrCreateThread(supabase, subject || "No Subject", allParticipants);
+
   // 2. Insert into emails table
   const { error: insertError } = await supabase
     .from('emails')
     .insert({
+      thread_id: threadId,
       owner_id: ownerId,
       from_address: from,
       to_addresses: toArray,
