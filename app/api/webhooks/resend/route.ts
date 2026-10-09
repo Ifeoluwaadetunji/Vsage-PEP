@@ -58,7 +58,7 @@ async function handleInboundEmail(payload: any, emailIdFromPayload?: string) {
   const threadId = await getOrCreateThread(supabase, subject || "No Subject", allParticipants);
 
   // 2. Insert into emails table
-  const { error: insertError } = await supabase
+  const { data: insertedEmail, error: insertError } = await supabase
     .from('emails')
     .insert({
       thread_id: threadId,
