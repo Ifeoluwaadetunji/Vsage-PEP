@@ -45,7 +45,8 @@ export async function GET(req: NextRequest) {
           processed++;
           
           // Try to sync attachments too
-          const { data: attachmentsList } = await resend.emails.receiving.attachments.list({ emailId });
+          const { data: attachmentsRes } = await resend.emails.receiving.attachments.list({ emailId });
+          const attachmentsList = attachmentsRes?.data;
           if (attachmentsList && attachmentsList.length > 0) {
             for (const att of attachmentsList) {
               await supabase.from('attachments').insert({

@@ -61,16 +61,16 @@ export async function GET(req: NextRequest) {
     }
 
     // Use Resend SDK to get the download URL dynamically
-    let resendAttachments;
+    let resendAttachments: any[] = [];
     if (email.direction === 'inbound') {
       const { data } = await resend.emails.receiving.attachments.list({ emailId: email.resend_id });
-      resendAttachments = data;
+      resendAttachments = data?.data || [];
     } else {
       const { data } = await resend.emails.attachments.list({ emailId: email.resend_id });
-      resendAttachments = data;
+      resendAttachments = data?.data || [];
     }
 
-    const targetAttachment = resendAttachments?.find(a => a.filename === attachment.filename);
+    const targetAttachment = resendAttachments.find((a: any) => a.filename === attachment.filename);
     
     if (!targetAttachment) {
       return NextResponse.json({ error: "Attachment not found in provider" }, { status: 404 });

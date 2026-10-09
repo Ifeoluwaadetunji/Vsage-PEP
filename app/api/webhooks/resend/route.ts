@@ -193,9 +193,10 @@ export async function POST(req: NextRequest) {
             data.text = fullEmail.text;
             
             // Fetch attachments list
-            const { data: attachmentsList } = await resend.emails.receiving.attachments.list({
+            const { data: attachmentsRes } = await resend.emails.receiving.attachments.list({
               emailId: receivingEmailId
             });
+            const attachmentsList = attachmentsRes?.data;
             if (attachmentsList && attachmentsList.length > 0) {
               data.attachments = attachmentsList;
             }
