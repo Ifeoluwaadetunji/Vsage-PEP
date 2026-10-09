@@ -116,10 +116,10 @@ export const useCompose = () => {
 
       setIsOpen(false);
       setState(initialState);
-      return true;
+      return { success: true, db_id: data.db_id };
     } catch (err) {
       console.error(err);
-      return false;
+      return { success: false };
     } finally {
       setIsSending(false);
     }

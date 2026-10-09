@@ -7,12 +7,14 @@ import { useCompose } from '@/hooks/useCompose';
 import { X, Send, Paperclip, Minimize2, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AttachmentDropzone } from './AttachmentDropzone';
+import { useToast } from '@/components/ui/ToastProvider';
 import styles from './EmailComposer.module.css';
 
 export const EmailComposer = () => {
   const { isOpen, state, isSending, updateState, closeCompose, sendEmail } = useCompose();
   const [minimized, setMinimized] = useState(false);
   const [showCcBcc, setShowCcBcc] = useState(false);
+  const { toast } = useToast();
 
   const editor = useEditor({
     extensions: [StarterKit, Link.configure({ openOnClick: false })],
@@ -98,7 +100,36 @@ export const EmailComposer = () => {
       alert("Please add a recipient, subject, and body.");
       return;
     }
-    await sendEmail({ to: finalTo, cc: finalCc, bcc: finalBcc });
+    const result = await sendEmail({ to: finalTo, cc: finalCc, bcc: finalBcc });
+    
+    if (result.success && result.db_id) {
+      toast({
+        type: 'success',
+        title: 'Message sent',
+        duration: 10000,
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            try {
+              const res = await fetch('/api/email/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: result.db_id })
+              });
+              if (res.ok) {
+                toast({ type: 'info', title: 'Sending cancelled. Moved to drafts.' });
+              } else {
+                toast({ type: 'error', title: 'Too late to cancel message' });
+              }
+            } catch (e) {
+              toast({ type: 'error', title: 'Failed to cancel message' });
+            }
+          }
+        }
+      });
+    } else {
+      toast({ type: 'error', title: 'Failed to send message' });
+    }
   };
 
   return (

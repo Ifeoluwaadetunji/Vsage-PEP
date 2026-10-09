@@ -119,6 +119,10 @@ export async function POST(req: NextRequest) {
       files = formData.getAll('attachments') as File[];
     }
 
+    // Default to 15 seconds delay for Undo Send
+    const delaySeconds = 15;
+    const scheduledAt = new Date(Date.now() + delaySeconds * 1000).toISOString();
+
     if (!to || !subject || (!html && !text)) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
@@ -156,6 +160,7 @@ export async function POST(req: NextRequest) {
       subject,
       html: applyBrandTemplate(sanitizedHtml),
       text: text || "",
+      scheduledAt: scheduledAt,
       attachments: resendAttachments.length > 0 ? resendAttachments : undefined
     };
 

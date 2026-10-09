@@ -103,6 +103,13 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
               <Users size={18} />
               Manage Users
             </div>
+            <div 
+              className={`${styles.navItem} ${pathname.startsWith('/analytics') ? styles.active : ''}`}
+              onClick={() => { router.push('/analytics'); onClose?.(); }}
+            >
+              <FileText size={18} />
+              Analytics
+            </div>
           </>
         )}
 

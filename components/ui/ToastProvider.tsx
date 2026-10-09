@@ -12,6 +12,10 @@ export interface ToastMessage {
   title: string;
   message?: string;
   duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface ToastContextType {
@@ -68,6 +72,18 @@ const ToastBanner = ({
         <div className={styles.title}>{toast.title}</div>
         {toast.message && <div className={styles.message}>{toast.message}</div>}
       </div>
+      {toast.action && (
+        <button 
+          onClick={() => { toast.action?.onClick(); handleClose(); }} 
+          style={{ 
+            background: 'var(--primary)', color: 'white', border: 'none', 
+            padding: '4px 12px', borderRadius: '4px', cursor: 'pointer',
+            fontSize: '0.875rem', fontWeight: 500, marginRight: '8px'
+          }}
+        >
+          {toast.action.label}
+        </button>
+      )}
       <button onClick={handleClose} className={styles.closeButton} aria-label="Close toast">
         <X size={16} />
       </button>
