@@ -54,7 +54,7 @@ export const useThread = (emailId: string) => {
       // Mark the viewed email as read
       await supabase.from('emails').update({ is_read: true }).eq('id', emailId);
 
-      let query;
+      let query: any;
       const currentThreadId = initialEmail.thread_id;
       if (currentThreadId) {
         // Fetch whole thread
@@ -75,7 +75,7 @@ export const useThread = (emailId: string) => {
             { event: '*', schema: 'public', table: 'emails', filter: `thread_id=eq.${currentThreadId}` },
             () => {
               // Re-fetch emails when change happens
-              query.then(({ data, error: err }) => {
+              query.then(({ data, error: err }: { data: any, error: any }) => {
                 if (!err && isMounted && data) {
                   setEmails(data as ThreadEmail[]);
                 }
