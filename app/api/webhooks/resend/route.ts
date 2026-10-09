@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Webhook } from "svix";
 import { createServiceClient } from "@/lib/supabase/server";
+import { resend } from "@/lib/resend";
 
 async function handleInboundEmail(payload: any) {
   const {
@@ -155,6 +156,30 @@ export async function POST(req: NextRequest) {
     // 3. Process the event
     if (eventType === 'email.received') {
       console.log(`[Webhook] Processing inbound email via Svix: ${resendEventId}`);
+      
+      const receivingEmailId = data.email_id;
+      if (receivingEmailId) {
+        try {
+          console.log(`Fetching full content for received email: ${receivingEmailId}`);
+          // Fallback to fetch if SDK is outdated, but try SDK first.
+          // Resend recently changed API: resend.emails.get vs resend.emails.receiving.get
+          const res = await fetch(`https://api.resend.com/emails/${receivingEmailId}`, {
+            headers: {
+              'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
+            }
+          });
+          if (res.ok) {
+            const fullEmail = await res.json();
+            data.html = fullEmail.html;
+            data.text = fullEmail.text;
+          } else {
+            console.error("Failed to fetch full email body from Resend API", await res.text());
+          }
+        } catch (e) {
+          console.error("Error fetching full email body", e);
+        }
+      }
+
       return await handleInboundEmail(data);
     }
 
