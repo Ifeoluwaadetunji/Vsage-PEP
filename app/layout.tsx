@@ -11,9 +11,16 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "PEP Mail",
   description: "Personal Professional Email Platform",
+  manifest: "/manifest.json",
+};
+
+export const viewport = {
+  themeColor: "#000000",
 };
 
 import { ToastProvider } from "@/components/ui/ToastProvider";
+
+import { PWARegistration } from "@/components/PWARegistration";
 
 export default function RootLayout({
   children,
@@ -23,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} dark`}>
       <body>
+        <PWARegistration />
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>

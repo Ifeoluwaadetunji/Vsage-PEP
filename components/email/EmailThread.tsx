@@ -141,6 +141,7 @@ export const EmailThread = ({ emails }: { emails: ThreadEmail[] }) => {
                           return `<a ${cleanAttrs} target="_blank">`;
                         })} 
                         sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+                        referrerPolicy="no-referrer"
                         style={{ width: '100%', minHeight: '600px', height: '65vh', border: 'none', colorScheme: 'dark light' }}
                         title="Email Body"
                       />
