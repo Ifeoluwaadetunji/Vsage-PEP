@@ -136,10 +136,11 @@ export const EmailThread = ({ emails }: { emails: ThreadEmail[] }) => {
                   <div style={{ marginBottom: '1.5rem' }}>
                     {email.body_html ? (
                       <iframe 
-                        srcDoc={email.body_html.includes('<head>') 
-                          ? email.body_html.replace('<head>', '<head><base target="_blank">') 
-                          : `<head><base target="_blank"></head>${email.body_html}`} 
-                        sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                        srcDoc={email.body_html.replace(/<a\s+([^>]*?)>/gi, (m, attrs) => {
+                          const cleanAttrs = attrs.replace(/target\s*=\s*["'][^"']*["']/gi, '');
+                          return `<a ${cleanAttrs} target="_blank">`;
+                        })} 
+                        sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
                         style={{ width: '100%', minHeight: '600px', height: '65vh', border: 'none', colorScheme: 'dark light' }}
                         title="Email Body"
                       />
