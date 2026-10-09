@@ -30,7 +30,9 @@ export const useThread = (emailId: string) => {
   const supabase = createClient();
 
   useEffect(() => {
-    const isMounted = true;
+    let isMounted = true;
+
+    let subscription: any = null;
 
     const fetchThread = async () => {
       setLoading(true);
@@ -53,7 +55,8 @@ export const useThread = (emailId: string) => {
       await supabase.from('emails').update({ is_read: true }).eq('id', emailId);
 
       let query;
-      if (initialEmail.thread_id) {
+      const currentThreadId = initialEmail.thread_id;
+      if (currentThreadId) {
         // Fetch whole thread
         query = supabase
           .from('emails')
@@ -61,8 +64,25 @@ export const useThread = (emailId: string) => {
             *,
             attachments (*)
           `)
-          .eq('thread_id', initialEmail.thread_id)
+          .eq('thread_id', currentThreadId)
           .order('created_at', { ascending: true });
+          
+        // Setup realtime subscription
+        subscription = supabase
+          .channel(`thread-${currentThreadId}`)
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'emails', filter: `thread_id=eq.${currentThreadId}` },
+            () => {
+              // Re-fetch emails when change happens
+              query.then(({ data, error: err }) => {
+                if (!err && isMounted && data) {
+                  setEmails(data as ThreadEmail[]);
+                }
+              });
+            }
+          )
+          .subscribe();
       } else {
         // Just this email
         query = supabase
@@ -87,6 +107,10 @@ export const useThread = (emailId: string) => {
 
     fetchThread();
 
+    return () => {
+      isMounted = false;
+      if (subscription) supabase.removeChannel(subscription);
+    };
   }, [emailId, supabase]);
 
   return { emails, loading, error };

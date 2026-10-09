@@ -83,15 +83,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
           );
         })}
 
-        <div className={styles.sectionTitle}>Labels</div>
-        <div className={styles.navItem}>
-          <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: 'var(--danger)' }} />
-          Urgent
-        </div>
-        <div className={styles.navItem}>
-          <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: 'var(--success)' }} />
-          Personal
-        </div>
+
 
         {profile?.role === 'admin' && (
           <>
