@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { EmailComposer } from '@/components/email/EmailComposer';
@@ -14,6 +14,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const checkOnboarding = async () => {
@@ -28,6 +29,7 @@ export default function DashboardLayout({
     };
     checkOnboarding();
   }, [router]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in an input
@@ -57,9 +59,17 @@ export default function DashboardLayout({
 
   return (
     <div className={styles.layout}>
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      
+      {isSidebarOpen && (
+        <div 
+          className={styles.overlay} 
+          onClick={() => setIsSidebarOpen(false)} 
+        />
+      )}
+
       <div className={styles.main}>
-        <TopBar />
+        <TopBar onMenuClick={() => setIsSidebarOpen(true)} />
         <div className={styles.content}>
           {children}
         </div>

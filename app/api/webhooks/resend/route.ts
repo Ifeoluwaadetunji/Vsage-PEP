@@ -149,6 +149,11 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Process the event
+    if (eventType === 'email.received') {
+      console.log(`[Webhook] Processing inbound email via Svix: ${resendEventId}`);
+      return await handleInboundEmail(data);
+    }
+
     const emailId = data.email_id;
     if (!emailId) {
       return new NextResponse("Missing email_id in payload", { status: 400 });

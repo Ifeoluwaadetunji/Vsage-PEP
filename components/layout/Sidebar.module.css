@@ -64,3 +64,16 @@
 .userInfo:hover {
   background-color: var(--bg-tertiary);
 }
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    z-index: 50;
+    height: 100vh;
+    left: -260px;
+    transition: left var(--transition-fast);
+  }
+  .sidebar.open {
+    left: 0;
+  }
+}

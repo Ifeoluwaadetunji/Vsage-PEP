@@ -16,7 +16,7 @@ const navItems = [
   { name: 'Trash', path: '/trash', icon: Trash2 },
 ];
 
-export const Sidebar = () => {
+export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) => {
   const pathname = usePathname();
   const router = useRouter();
   const [profile, setProfile] = useState<{ email?: string; full_name?: string, role?: string } | null>(null);
@@ -60,7 +60,7 @@ export const Sidebar = () => {
   };
 
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
       <div className={styles.composeWrapper}>
         <Button fullWidth size="lg" leftIcon={<Edit3 size={18} />} onClick={openCompose}>
           Compose
@@ -75,7 +75,7 @@ export const Sidebar = () => {
             <div 
               key={item.name} 
               className={`${styles.navItem} ${isActive ? styles.active : ''}`}
-              onClick={() => router.push(item.path)}
+              onClick={() => { router.push(item.path); onClose?.(); }}
             >
               <Icon size={18} />
               {item.name}
@@ -98,7 +98,7 @@ export const Sidebar = () => {
             <div className={styles.sectionTitle}>Admin</div>
             <div 
               className={`${styles.navItem} ${pathname.startsWith('/import') ? styles.active : ''}`}
-              onClick={() => router.push('/import')}
+              onClick={() => { router.push('/import'); onClose?.(); }}
             >
               <Users size={18} />
               Manage Users
@@ -109,14 +109,14 @@ export const Sidebar = () => {
         <div className={styles.sectionTitle}>Account</div>
         <div 
           className={`${styles.navItem} ${pathname.startsWith('/settings') ? styles.active : ''}`}
-          onClick={() => router.push('/settings')}
+          onClick={() => { router.push('/settings'); onClose?.(); }}
         >
           <Settings size={18} />
           Settings
         </div>
         <div 
           className={styles.navItem}
-          onClick={handleLogout}
+          onClick={() => { handleLogout(); onClose?.(); }}
         >
           <LogOut size={18} />
           Log Out
