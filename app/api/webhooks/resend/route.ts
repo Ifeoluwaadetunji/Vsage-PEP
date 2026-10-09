@@ -3,6 +3,15 @@ import { Webhook } from "svix";
 import { createServiceClient } from "@/lib/supabase/server";
 import { resend } from "@/lib/resend";
 import { getOrCreateThread } from "@/lib/threading";
+import webpush from 'web-push';
+
+if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    'mailto:support@vsage.store',
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
 
 async function handleInboundEmail(payload: any, emailIdFromPayload?: string) {
   const {
@@ -97,6 +106,37 @@ async function handleInboundEmail(payload: any, emailIdFromPayload?: string) {
         storage_path: 'resend:pending'
       });
     }
+  }
+
+  // 4. Trigger Web Push Notifications
+  try {
+    const { data: subscriptions } = await supabase
+      .from('push_subscriptions')
+      .select('subscription')
+      .eq('user_id', ownerId);
+
+    if (subscriptions && subscriptions.length > 0) {
+      const payloadString = JSON.stringify({
+        title: `New email from ${from.replace(/<[^>]*>?/gm, '').trim()}`,
+        body: subject || 'No Subject',
+        url: `/email/${insertedEmail.id}`
+      });
+
+      for (const sub of subscriptions) {
+        try {
+          await webpush.sendNotification(sub.subscription, payloadString);
+        } catch (pushErr: any) {
+          if (pushErr.statusCode === 410 || pushErr.statusCode === 404) {
+            // Subscription has expired or is no longer valid, delete it
+            await supabase.from('push_subscriptions').delete().eq('subscription->>endpoint', sub.subscription.endpoint);
+          } else {
+            console.error('Error sending push notification', pushErr);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Failed to process push subscriptions', err);
   }
 
   console.log(`[Inbound Webhook] Successfully received email for ${recipientEmail}`);
