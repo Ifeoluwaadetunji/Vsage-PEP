@@ -4,7 +4,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { resend } from "@/lib/resend";
 import { getOrCreateThread } from "@/lib/threading";
 
-async function handleInboundEmail(payload: any) {
+async function handleInboundEmail(payload: any, emailIdFromPayload?: string) {
   const {
     from,
     to,
@@ -13,7 +13,8 @@ async function handleInboundEmail(payload: any) {
     text,
     cc,
     bcc,
-    messageId
+    messageId,
+    attachments
   } = payload;
 
   if (!to || !from) {
@@ -74,11 +75,54 @@ async function handleInboundEmail(payload: any) {
       is_read: false,
       send_status: 'delivered',
       message_id: messageId
-    });
+    })
+    .select('id')
+    .single();
 
   if (insertError) {
     console.error("[Inbound Webhook DB Error]", insertError);
     return new NextResponse("Database Error", { status: 500 });
+  }
+
+  // 3. Process attachments
+  if (insertedEmail?.id && attachments && attachments.length > 0 && emailIdFromPayload) {
+    for (const att of attachments) {
+      if (!att.id) continue;
+      try {
+        const { data: attachmentData } = await resend.emails.receiving.attachments.get({
+          id: att.id,
+          emailId: emailIdFromPayload
+        });
+        
+        if (attachmentData?.download_url) {
+          const fileRes = await fetch(attachmentData.download_url);
+          if (fileRes.ok) {
+            const buffer = await fileRes.arrayBuffer();
+            const storagePath = `${ownerId}/${Date.now()}-${att.filename?.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+            
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from("attachments")
+              .upload(storagePath, buffer, {
+                contentType: att.content_type || 'application/octet-stream',
+                cacheControl: "3600",
+                upsert: false,
+              });
+
+            if (uploadData && !uploadError) {
+              await supabase.from('attachments').insert({
+                email_id: insertedEmail.id,
+                filename: att.filename,
+                mime_type: att.content_type || 'application/octet-stream',
+                size_bytes: buffer.byteLength,
+                storage_path: uploadData.path
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error(`Failed to process attachment ${att.id}`, err);
+      }
+    }
   }
 
   console.log(`[Inbound Webhook] Successfully received email for ${recipientEmail}`);
@@ -167,26 +211,20 @@ export async function POST(req: NextRequest) {
       if (receivingEmailId) {
         try {
           console.log(`Fetching full content for received email: ${receivingEmailId}`);
-          // Fallback to fetch if SDK is outdated, but try SDK first.
-          // Resend recently changed API: resend.emails.get vs resend.emails.receiving.get
-          const res = await fetch(`https://api.resend.com/emails/${receivingEmailId}`, {
-            headers: {
-              'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
-            }
-          });
-          if (res.ok) {
-            const fullEmail = await res.json();
+          const { data: fullEmail, error: fetchError } = await resend.emails.receiving.get(receivingEmailId);
+          if (fetchError) {
+            console.error("Failed to fetch full email body from Resend API", fetchError);
+          } else if (fullEmail) {
             data.html = fullEmail.html;
             data.text = fullEmail.text;
-          } else {
-            console.error("Failed to fetch full email body from Resend API", await res.text());
+            data.attachments = fullEmail.attachments || data.attachments;
           }
         } catch (e) {
           console.error("Error fetching full email body", e);
         }
       }
 
-      return await handleInboundEmail(data);
+      return await handleInboundEmail(data, receivingEmailId);
     }
 
     const emailId = data.email_id;
