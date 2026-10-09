@@ -7,13 +7,18 @@ import { Avatar } from '../ui/Avatar';
 import { ArrowLeft, Reply, MoreVertical } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/Button';
+import { createClient } from '@/lib/supabase/client';
+import { useToast } from '@/components/ui/ToastProvider';
 
 export const EmailThread = ({ emails }: { emails: ThreadEmail[] }) => {
   const router = useRouter();
+  const { toast } = useToast();
   // Keep all emails except the last one collapsed by default
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     [emails[emails.length - 1]?.id]: true
   });
+  
+  const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
 
   const toggleExpand = (id: string) => {
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
@@ -22,6 +27,12 @@ export const EmailThread = ({ emails }: { emails: ThreadEmail[] }) => {
   const handleReply = () => {
     // Open composer with thread ID
     window.dispatchEvent(new CustomEvent('open-compose', { detail: { replyTo: emails[emails.length - 1] }}));
+  };
+
+  const handleAction = async (id: string, action: 'trash' | 'archive') => {
+    const supabase = createClient();
+    await supabase.from('emails').update({ folder: action }).eq('id', id);
+    setDropdownOpenId(null);
   };
 
   if (!emails || emails.length === 0) return null;
@@ -70,9 +81,53 @@ export const EmailThread = ({ emails }: { emails: ThreadEmail[] }) => {
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem', position: 'relative' }}>
                   {format(new Date(email.created_at), 'MMM d, h:mm a')}
-                  <button style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}><MoreVertical size={16} /></button>
+                  <button 
+                    style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}
+                    onClick={(e) => { e.stopPropagation(); setDropdownOpenId(dropdownOpenId === email.id ? null : email.id); }}
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+                  
+                  {dropdownOpenId === email.id && (
+                    <div style={{
+                      position: 'absolute', right: 0, top: '100%', marginTop: '0.5rem',
+                      background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-md)', padding: '0.5rem', zIndex: 10,
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', minWidth: '150px'
+                    }}>
+                      <div 
+                        style={{ padding: '0.5rem 1rem', cursor: 'pointer', color: 'var(--text-primary)' }}
+                        onClick={(e) => { e.stopPropagation(); handleReply(); setDropdownOpenId(null); }}
+                      >
+                        Reply
+                      </div>
+                      <div 
+                        style={{ padding: '0.5rem 1rem', cursor: 'pointer', color: 'var(--text-primary)' }}
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          navigator.clipboard.writeText(window.location.href); 
+                          setDropdownOpenId(null);
+                          toast({ type: 'success', title: 'Link copied to clipboard!' });
+                        }}
+                      >
+                        Share Link
+                      </div>
+                      <div 
+                        style={{ padding: '0.5rem 1rem', cursor: 'pointer', color: 'var(--text-primary)' }}
+                        onClick={(e) => { e.stopPropagation(); handleAction(email.id, 'archive'); }}
+                      >
+                        Archive
+                      </div>
+                      <div 
+                        style={{ padding: '0.5rem 1rem', cursor: 'pointer', color: 'var(--danger)' }}
+                        onClick={(e) => { e.stopPropagation(); handleAction(email.id, 'trash'); }}
+                      >
+                        Delete
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

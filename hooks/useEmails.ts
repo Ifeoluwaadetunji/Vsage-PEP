@@ -76,5 +76,13 @@ export const useEmails = (options: { folder?: string; starred?: boolean }) => {
     await supabase.from('emails').update({ is_starred: !is_starred }).eq('id', id);
   };
 
-  return { emails, loading, toggleStar };
+  const moveEmails = async (ids: string[], folder: string) => {
+    await supabase.from('emails').update({ folder }).in('id', ids);
+  };
+
+  const deleteEmails = async (ids: string[]) => {
+    await supabase.from('emails').delete().in('id', ids);
+  };
+
+  return { emails, loading, toggleStar, moveEmails, deleteEmails };
 };

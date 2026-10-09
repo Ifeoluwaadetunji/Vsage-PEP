@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const EmailList: React.FC<Props> = ({ options, title }) => {
-  const { emails, loading, toggleStar } = useEmails(options);
+  const { emails, loading, toggleStar, moveEmails, deleteEmails } = useEmails(options);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const handleSelect = (id: string) => {
@@ -45,8 +45,35 @@ export const EmailList: React.FC<Props> = ({ options, title }) => {
         />
         {selectedIds.size > 0 && (
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <Button variant="secondary" size="sm" leftIcon={<Archive size={16} />}>Archive</Button>
-            <Button variant="danger" size="sm" leftIcon={<Trash2 size={16} />}>Delete</Button>
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              leftIcon={<Archive size={16} />}
+              onClick={async () => {
+                await moveEmails(Array.from(selectedIds), 'archive');
+                setSelectedIds(new Set());
+              }}
+            >
+              Archive
+            </Button>
+            <Button 
+              variant="danger" 
+              size="sm" 
+              leftIcon={<Trash2 size={16} />}
+              onClick={async () => {
+                if (options.folder === 'trash') {
+                  if (confirm("Are you sure you want to permanently delete these emails?")) {
+                    await deleteEmails(Array.from(selectedIds));
+                    setSelectedIds(new Set());
+                  }
+                } else {
+                  await moveEmails(Array.from(selectedIds), 'trash');
+                  setSelectedIds(new Set());
+                }
+              }}
+            >
+              Delete
+            </Button>
           </div>
         )}
       </div>
