@@ -86,35 +86,28 @@ export const useCompose = () => {
     setIsSending(true);
     const finalState = { ...state, ...overrides };
     try {
+      const formData = new FormData();
+      formData.append('to', JSON.stringify(finalState.to));
+      formData.append('cc', JSON.stringify(finalState.cc));
+      formData.append('bcc', JSON.stringify(finalState.bcc));
+      formData.append('subject', finalState.subject);
+      formData.append('html', finalState.html);
+      formData.append('text', finalState.text);
+
+      if (finalState.attachments && finalState.attachments.length > 0) {
+        for (const file of finalState.attachments) {
+          formData.append('attachments', file);
+        }
+      }
+
       const res = await fetch('/api/email/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: finalState.to,
-          cc: finalState.cc,
-          bcc: finalState.bcc,
-          subject: finalState.subject,
-          html: finalState.html,
-          text: finalState.text
-        })
+        body: formData
       });
 
       if (!res.ok) throw new Error("Failed to send");
       
       const data = await res.json();
-      
-      // Upload attachments if any
-      if (state.attachments.length > 0 && data.db_id) {
-        for (const file of state.attachments) {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('email_id', data.db_id);
-          await fetch('/api/email/attachments/upload', {
-            method: 'POST',
-            body: formData
-          });
-        }
-      }
 
       // Delete draft if it existed
       if (state.draftId) {

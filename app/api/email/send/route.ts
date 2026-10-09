@@ -101,8 +101,22 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Validate Payload
-    const body = await req.json();
-    const { to, subject, html, text, cc, bcc } = body;
+    const isJson = req.headers.get('content-type')?.includes('application/json');
+    let to, subject, html, text, cc, bcc, files: File[] = [];
+
+    if (isJson) {
+      const body = await req.json();
+      to = body.to; subject = body.subject; html = body.html; text = body.text; cc = body.cc; bcc = body.bcc;
+    } else {
+      const formData = await req.formData();
+      to = JSON.parse(formData.get('to') as string || '[]');
+      cc = JSON.parse(formData.get('cc') as string || '[]');
+      bcc = JSON.parse(formData.get('bcc') as string || '[]');
+      subject = formData.get('subject') as string;
+      html = formData.get('html') as string;
+      text = formData.get('text') as string;
+      files = formData.getAll('attachments') as File[];
+    }
 
     if (!to || !subject || (!html && !text)) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -123,6 +137,17 @@ export async function POST(req: NextRequest) {
     const fromAddress = profile.email;
     const sanitizedHtml = sanitizeEmailBody(html || "");
 
+    // Process attachments for Resend
+    const resendAttachments = [];
+    for (const file of files) {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      resendAttachments.push({
+        filename: file.name,
+        content: buffer
+      });
+    }
+
     // 5. Send via Resend
     const resendPayload: any = {
       from: `"Vsage Tech" <${fromAddress}>`,
@@ -130,10 +155,11 @@ export async function POST(req: NextRequest) {
       subject,
       html: applyBrandTemplate(sanitizedHtml),
       text: text || "",
+      attachments: resendAttachments.length > 0 ? resendAttachments : undefined
     };
 
-    if (cc) resendPayload.cc = Array.isArray(cc) ? cc : [cc];
-    if (bcc) resendPayload.bcc = Array.isArray(bcc) ? bcc : [bcc];
+    if (cc && cc.length > 0) resendPayload.cc = Array.isArray(cc) ? cc : [cc];
+    if (bcc && bcc.length > 0) resendPayload.bcc = Array.isArray(bcc) ? bcc : [bcc];
 
     const { data: resendData, error: resendError } = await resend.emails.send(resendPayload);
 
@@ -166,6 +192,29 @@ export async function POST(req: NextRequest) {
     if (dbError) {
       console.error("[DB Error]", dbError);
       // We don't fail the request here, email is sent, just missing from outbox
+    } else if (emailRecord?.id && files.length > 0) {
+      // Upload attachments to Supabase Storage
+      for (const file of files) {
+        const storagePath = `${user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const { data: uploadData, error: uploadError } = await serviceRole.storage
+          .from("attachments")
+          .upload(storagePath, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (!uploadError && uploadData) {
+          await serviceRole.from('attachments').insert({
+            email_id: emailRecord.id,
+            filename: file.name,
+            mime_type: file.type,
+            size_bytes: file.size,
+            storage_path: uploadData.path
+          });
+        } else if (uploadError) {
+          console.error("[Storage Upload Error]", uploadError);
+        }
+      }
     }
 
     // 7. Audit log
