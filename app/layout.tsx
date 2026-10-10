@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "PEP Mail",
+  title: "Vsage Mail",
   description: "Personal Professional Email Platform",
   manifest: "/manifest.json",
 };

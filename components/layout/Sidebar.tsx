@@ -61,6 +61,11 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
 
   return (
     <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
+      <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <img src="/logo.png" alt="Vsage Mail Logo" style={{ width: 32, height: 32, borderRadius: '8px' }} />
+        <span style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>Vsage Mail</span>
+      </div>
+
       <div className={styles.composeWrapper}>
         <Button fullWidth size="lg" leftIcon={<Edit3 size={18} />} onClick={openCompose}>
           Compose

@@ -24,6 +24,10 @@
   padding: 0.25rem;
 }
 
+.mobileLogo {
+  display: none;
+}
+
 .actions {
   display: flex;
   align-items: center;
@@ -33,5 +37,8 @@
 @media (max-width: 768px) {
   .menuBtn {
     display: block;
+  }
+  .mobileLogo {
+    display: flex !important;
   }
 }

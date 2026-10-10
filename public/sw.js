@@ -39,3 +39,7 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+
+self.addEventListener('fetch', (event) => {
+  // Required for PWA installability prompt
+});

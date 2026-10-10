@@ -89,9 +89,7 @@ export default function CreateAccountPage() {
       <div className={`${styles.container} animate-fade-in`}>
         <div className={styles.header}>
           <div className="flex-center" style={{ marginBottom: "0.5rem" }}>
-            <div style={{ padding: "12px", background: "var(--accent-glow)", borderRadius: "50%", color: "var(--accent-primary)" }}>
-              <UserPlus size={28} />
-            </div>
+            <img src="/logo.png" alt="Vsage Mail Logo" style={{ width: 64, height: 64, borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
           </div>
           <h1 className={styles.title}>Create Account</h1>
           <p className={styles.subtitle}>Sign up for PEP Mail</p>
