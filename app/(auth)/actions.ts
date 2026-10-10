@@ -9,6 +9,7 @@ const authSchema = z.object({
   email: z.string().email("Invalid email address").transform((e) => e.toLowerCase().trim()),
   password: z.string().min(8, "Password must be at least 8 characters"),
   adminCode: z.string().optional(),
+  fullName: z.string().min(2, "Preferred name must be at least 2 characters").optional(),
 });
 
 export async function verifyLoginRateLimit(email: string) {
@@ -51,6 +52,7 @@ export async function sanitizeAuthInput(data: {
   email: string; 
   password?: string; 
   adminCode?: string;
+  fullName?: string;
   type?: "login" | "create-account" | "forgot-password" | "update-password";
 }) {
   try {
@@ -58,17 +60,20 @@ export async function sanitizeAuthInput(data: {
       if (!data.adminCode || !verifyAdminCode(data.adminCode)) {
         return { error: "Invalid or expired Admin Invite Code" };
       }
+      if (!data.fullName || data.fullName.trim().length < 2) {
+        return { error: "Preferred name must be at least 2 characters" };
+      }
     }
 
     if (data.password !== undefined) {
       const parsed = authSchema.parse(data);
-      return { success: true, data: parsed as { email: string; password?: string; adminCode?: string } };
+      return { success: true, data: parsed as { email: string; password?: string; adminCode?: string; fullName?: string } };
     } else {
       const emailOnlySchema = z.object({
         email: z.string().email("Invalid email address").transform((e) => e.toLowerCase().trim()),
       });
       const parsed = emailOnlySchema.parse(data);
-      return { success: true, data: parsed as { email: string; password?: string; adminCode?: string } };
+      return { success: true, data: parsed as { email: string; password?: string; adminCode?: string; fullName?: string } };
     }
   } catch (error: any) {
     return { error: error.errors?.[0]?.message || "Invalid input" };

@@ -11,6 +11,7 @@ import { verifyCreateAccountRateLimit, sanitizeAuthInput } from "../actions";
 import Link from "next/link";
 
 export default function CreateAccountPage() {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -41,6 +42,7 @@ export default function CreateAccountPage() {
       const sanitizeResult = await sanitizeAuthInput({ 
         email, 
         password, 
+        fullName,
         adminCode, 
         type: "create-account" 
       });
@@ -52,6 +54,9 @@ export default function CreateAccountPage() {
         email: sanitizedData.email,
         password: sanitizedData.password!,
         options: {
+          data: {
+            full_name: sanitizedData.fullName,
+          },
           emailRedirectTo: `${window.location.origin}/api/auth/callback`,
         }
       });
@@ -93,6 +98,21 @@ export default function CreateAccountPage() {
         </div>
 
         <form onSubmit={handleCreateAccount} className={styles.form}>
+          <div className={styles.field}>
+            <label htmlFor="fullName" className={styles.label}>Preferred Name</label>
+            <input
+              id="fullName"
+              type="text"
+              className="input-base"
+              placeholder="e.g. Jane Doe"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              disabled={isLoading}
+              minLength={2}
+            />
+          </div>
+
           <div className={styles.field}>
             <label htmlFor="email" className={styles.label}>Email Address</label>
             <input
