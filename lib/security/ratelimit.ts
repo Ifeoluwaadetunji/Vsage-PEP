@@ -18,6 +18,20 @@ export const loginRateLimit = redis ? new Ratelimit({
   prefix: "@upstash/ratelimit/login",
 }) : dummyLimiter;
 
+export const createAccountRateLimit = redis ? new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(3, "1 h"),
+  analytics: true,
+  prefix: "@upstash/ratelimit/create-account",
+}) : dummyLimiter;
+
+export const forgotPasswordRateLimit = redis ? new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(3, "1 h"),
+  analytics: true,
+  prefix: "@upstash/ratelimit/forgot-password",
+}) : dummyLimiter;
+
 export const mfaRateLimit = redis ? new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(5, "15 m"),

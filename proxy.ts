@@ -29,11 +29,12 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isPublicRoute = request.nextUrl.pathname === '/login' || request.nextUrl.pathname.startsWith('/api/webhooks')
+  const publicPaths = ['/login', '/create-account', '/forgot-password', '/update-password'];
+  const isPublicRoute = publicPaths.includes(request.nextUrl.pathname) || request.nextUrl.pathname.startsWith('/api/webhooks')
   
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = '/create-account'
     return NextResponse.redirect(url)
   }
 

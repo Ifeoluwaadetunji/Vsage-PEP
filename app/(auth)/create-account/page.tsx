@@ -6,24 +6,35 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/ToastProvider";
 import { Button } from "@/components/ui/Button";
 import styles from "../Auth.module.css";
-import { Mail } from "lucide-react";
-import { verifyLoginRateLimit, sanitizeAuthInput } from "../actions";
+import { UserPlus } from "lucide-react";
+import { verifyCreateAccountRateLimit, sanitizeAuthInput } from "../actions";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function CreateAccountPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
   const supabase = createClient();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      toast({
+        type: "error",
+        title: "Validation Error",
+        message: "Passwords do not match.",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const rlResult = await verifyLoginRateLimit(email);
+      const rlResult = await verifyCreateAccountRateLimit(email);
       if (rlResult.error) throw new Error(rlResult.error);
 
       const sanitizeResult = await sanitizeAuthInput({ email, password });
@@ -31,41 +42,31 @@ export default function LoginPage() {
 
       const sanitizedData = sanitizeResult.data!;
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signUp({
         email: sanitizedData.email,
         password: sanitizedData.password!,
+        options: {
+          emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+        }
       });
 
       if (error) {
         throw error;
       }
 
-      // Check MFA Status
-      const { data: mfaData, error: mfaError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (mfaError) throw mfaError;
+      toast({
+        type: "success",
+        title: "Account Created",
+        message: "Please check your email to verify your account.",
+      });
 
-      if (mfaData.nextLevel === 'aal2' && mfaData.currentLevel !== 'aal2') {
-        // Enrolled but not verified this session
-        router.push("/mfa/verify");
-      } else if (mfaData.nextLevel === 'aal1') {
-        // Not enrolled yet
-        router.push("/mfa/setup");
-      } else {
-        // Fully authenticated (aal2 current)
-        const { data: { user } } = await supabase.auth.getUser();
-        const { data: profile } = await supabase.from('profiles').select('email').eq('id', user?.id).single();
-        if (profile?.email?.endsWith('@mail.vsage.store')) {
-          router.push("/inbox");
-        } else {
-          router.push("/onboarding");
-        }
-      }
+      router.push("/login");
 
     } catch (err: any) {
       toast({
         type: "error",
-        title: "Authentication Failed",
-        message: err.message || "Invalid email or password. Please try again.",
+        title: "Account Creation Failed",
+        message: err.message || "An error occurred during sign up. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -78,14 +79,14 @@ export default function LoginPage() {
         <div className={styles.header}>
           <div className="flex-center" style={{ marginBottom: "0.5rem" }}>
             <div style={{ padding: "12px", background: "var(--accent-glow)", borderRadius: "50%", color: "var(--accent-primary)" }}>
-              <Mail size={28} />
+              <UserPlus size={28} />
             </div>
           </div>
-          <h1 className={styles.title}>Welcome back</h1>
-          <p className={styles.subtitle}>Sign in to your PEP Mail account</p>
+          <h1 className={styles.title}>Create Account</h1>
+          <p className={styles.subtitle}>Sign up for PEP Mail</p>
         </div>
 
-        <form onSubmit={handleLogin} className={styles.form}>
+        <form onSubmit={handleCreateAccount} className={styles.form}>
           <div className={styles.field}>
             <label htmlFor="email" className={styles.label}>Email Address</label>
             <input
@@ -111,20 +112,33 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading}
+              minLength={8}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="confirmPassword" className={styles.label}>Confirm Password</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              className="input-base"
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              disabled={isLoading}
+              minLength={8}
             />
           </div>
 
           <Button type="submit" fullWidth isLoading={isLoading} size="lg">
-            Sign In
+            Sign Up
           </Button>
 
           <div className="flex-center mt-4" style={{ gap: "1rem", fontSize: "0.875rem" }}>
-            <Link href="/forgot-password" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>
-              Forgot password?
-            </Link>
-            <span style={{ color: "var(--border-strong)" }}>|</span>
-            <Link href="/create-account" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>
-              Create account
+            <span style={{ color: "var(--text-secondary)" }}>Already have an account?</span>
+            <Link href="/login" style={{ color: "var(--accent-primary)", textDecoration: "none", fontWeight: 500 }}>
+              Sign in
             </Link>
           </div>
         </form>
