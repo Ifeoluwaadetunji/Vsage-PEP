@@ -1,8 +1,32 @@
+const CACHE_NAME = 'pep-mail-cache-v1';
+const OFFLINE_URL = '/offline.html';
+
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll([
+        '/offline.html',
+        '/logo.png',
+        '/icon-192x192.png',
+        '/icon-512x512.png',
+      ]);
+    })
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
   event.waitUntil(clients.claim());
 });
 
@@ -11,8 +35,8 @@ self.addEventListener('push', (event) => {
     const data = event.data.json();
     const options = {
       body: data.body,
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
+      icon: '/logo.png',
+      badge: '/logo.png',
       data: data.url
     };
     event.waitUntil(
@@ -41,5 +65,24 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Required for PWA installability prompt
+  // We only want to handle GET requests for offline caching
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  event.respondWith(
+    fetch(event.request)
+      .catch(() => {
+        return caches.match(event.request)
+          .then((response) => {
+            if (response) {
+              return response;
+            }
+            // If it's a navigation request, return offline fallback
+            if (event.request.mode === 'navigate') {
+              return caches.match(OFFLINE_URL);
+            }
+          });
+      })
+  );
 });

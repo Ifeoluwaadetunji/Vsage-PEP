@@ -80,15 +80,15 @@ export function PWARegistration() {
                   navigator.serviceWorker.ready.then((registration) => {
                     registration.showNotification(title, {
                       body: subject,
-                      icon: '/favicon.ico',
-                      badge: '/favicon.ico',
+                      icon: '/logo.png',
+                      badge: '/logo.png',
                       data: `/email/${newEmail.id}`
                     });
                   }).catch(() => {
                     // Fallback to basic notification
                     const notification = new Notification(title, {
                       body: subject,
-                      icon: '/favicon.ico'
+                      icon: '/logo.png'
                     });
                     notification.onclick = () => {
                       window.location.href = `/email/${newEmail.id}`;
