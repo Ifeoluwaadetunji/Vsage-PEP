@@ -1,16 +1,22 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CsvImportBanner } from '@/components/ui/CsvImportBanner';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/ToastProvider';
 import { UploadCloud, File, CheckCircle, AlertCircle } from 'lucide-react';
 import styles from './Import.module.css';
+import { getAdminCodeAction } from './actions';
 
 export default function BulkImportPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [results, setResults] = useState<any>(null);
+  const [dailyCode, setDailyCode] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    getAdminCodeAction().then(code => setDailyCode(code));
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -57,10 +63,25 @@ export default function BulkImportPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className="text-h2">Bulk User Import</h1>
-        <p className="text-body">Add multiple team members at once via CSV upload.</p>
+        <h1 className="text-h2">User Management</h1>
+        <p className="text-body">Manage invites and import users.</p>
       </div>
 
+      {dailyCode && (
+        <div style={{ background: 'var(--surface-sunken)', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', border: '1px solid var(--border-subtle)' }}>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 500, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ color: 'var(--accent-primary)' }}>✦</span> Daily Invite Code
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>
+            Share this code with new users so they can create an account. This code rotates automatically every 24 hours.
+          </p>
+          <div style={{ display: 'inline-block', background: 'var(--surface-raised)', padding: '0.75rem 1.5rem', borderRadius: '8px', fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '2px', border: '1px solid var(--border-strong)' }}>
+            {dailyCode}
+          </div>
+        </div>
+      )}
+
+      <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Bulk User Import</h2>
       <CsvImportBanner />
 
       <div className={styles.uploadCard}>
