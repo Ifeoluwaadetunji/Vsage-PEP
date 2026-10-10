@@ -14,6 +14,7 @@ export default function CreateAccountPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [adminCode, setAdminCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -37,7 +38,12 @@ export default function CreateAccountPage() {
       const rlResult = await verifyCreateAccountRateLimit(email);
       if (rlResult.error) throw new Error(rlResult.error);
 
-      const sanitizeResult = await sanitizeAuthInput({ email, password });
+      const sanitizeResult = await sanitizeAuthInput({ 
+        email, 
+        password, 
+        adminCode, 
+        type: "create-account" 
+      });
       if (sanitizeResult.error) throw new Error(sanitizeResult.error);
 
       const sanitizedData = sanitizeResult.data!;
@@ -128,6 +134,21 @@ export default function CreateAccountPage() {
               required
               disabled={isLoading}
               minLength={8}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="adminCode" className={styles.label}>Admin Invite Code</label>
+            <input
+              id="adminCode"
+              type="text"
+              className="input-base"
+              placeholder="6-digit code"
+              value={adminCode}
+              onChange={(e) => setAdminCode(e.target.value)}
+              required
+              disabled={isLoading}
+              maxLength={6}
             />
           </div>
 
