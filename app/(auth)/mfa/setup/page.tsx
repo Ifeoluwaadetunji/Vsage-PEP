@@ -24,29 +24,50 @@ export default function MfaSetupPage() {
     
     const initializeMfa = async () => {
       try {
-        // First check for and remove any existing unverified factors so we can get a fresh QR code
+        const storedFactorId = sessionStorage.getItem('mfaSetupFactorId');
+        const storedQrCode = sessionStorage.getItem('mfaSetupQrCode');
+        let factorIdToUse = '';
+        let qrCodeToUse = '';
+
         const { data: factorsData, error: listError } = await supabase.auth.mfa.listFactors();
-        if (factorsData?.totp) {
-          const unverifiedFactors = factorsData.totp.filter(f => (f.status as string) === 'unverified');
-          for (const factor of unverifiedFactors) {
-            await supabase.auth.mfa.unenroll({ factorId: factor.id });
+        
+        const existingUnverified = factorsData?.totp?.find(f => (f.status as string) === 'unverified');
+
+        if (existingUnverified && storedFactorId === existingUnverified.id && storedQrCode) {
+          // Use the stored factor if it still exists and is unverified
+          factorIdToUse = storedFactorId;
+          qrCodeToUse = storedQrCode;
+        } else {
+          // Clean up any unverified factors since we don't have their QR codes anymore
+          if (factorsData?.totp) {
+            const unverifiedFactors = factorsData.totp.filter(f => (f.status as string) === 'unverified');
+            for (const factor of unverifiedFactors) {
+              await supabase.auth.mfa.unenroll({ factorId: factor.id });
+            }
+          }
+
+          const { data: userData } = await supabase.auth.getUser();
+          const userEmail = userData?.user?.email || 'Admin';
+
+          const { data, error } = await supabase.auth.mfa.enroll({
+            factorType: 'totp',
+            issuer: 'Vsage Mail',
+            friendlyName: userEmail
+          });
+
+          if (error) throw error;
+          
+          if (data) {
+            factorIdToUse = data.id;
+            qrCodeToUse = data.totp.qr_code;
+            sessionStorage.setItem('mfaSetupFactorId', factorIdToUse);
+            sessionStorage.setItem('mfaSetupQrCode', qrCodeToUse);
           }
         }
 
-        const { data: userData } = await supabase.auth.getUser();
-        const userEmail = userData?.user?.email || 'Admin';
-
-        const { data, error } = await supabase.auth.mfa.enroll({
-          factorType: 'totp',
-          issuer: 'Vsage Mail',
-          friendlyName: userEmail
-        });
-
-        if (error) throw error;
-        
-        if (!ignore && data) {
-          setFactorId(data.id);
-          setQrCode(data.totp.qr_code);
+        if (!ignore && factorIdToUse) {
+          setFactorId(factorIdToUse);
+          setQrCode(qrCodeToUse);
         }
       } catch (err: any) {
         toast({
@@ -79,6 +100,9 @@ export default function MfaSetupPage() {
       });
 
       if (verify.error) throw verify.error;
+
+      sessionStorage.removeItem('mfaSetupFactorId');
+      sessionStorage.removeItem('mfaSetupQrCode');
 
       toast({
         type: "success",

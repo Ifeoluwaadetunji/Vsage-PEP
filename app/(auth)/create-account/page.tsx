@@ -57,7 +57,7 @@ export default function CreateAccountPage() {
           data: {
             full_name: sanitizedData.fullName,
           },
-          emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/email-verified`,
         }
       });
 
