@@ -57,28 +57,27 @@
   text-overflow: ellipsis;
   font-size: 0.875rem;
   color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .content {
   flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
   min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
 .subject {
   font-size: 0.875rem;
   color: var(--text-primary);
-  white-space: nowrap;
 }
 
 .preview {
   font-size: 0.875rem;
   color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-left: 0.5rem;
 }
 
 .meta {
@@ -87,4 +86,5 @@
   gap: 1rem;
   color: var(--text-muted);
   font-size: 0.75rem;
+  flex-shrink: 0;
 }
