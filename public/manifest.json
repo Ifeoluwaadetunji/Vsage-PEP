@@ -3,6 +3,7 @@
   "short_name": "Vsage Mail",
   "description": "Modern email client for SMEs",
   "start_url": "/inbox",
+  "scope": "/",
   "id": "/inbox",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -22,7 +23,13 @@
       "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

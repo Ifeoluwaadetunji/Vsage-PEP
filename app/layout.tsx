@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   title: "Vsage Mail",
   description: "Personal Professional Email Platform",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Vsage Mail",
+  },
 };
 
 export const viewport = {
